@@ -290,5 +290,48 @@ const char *cart_type_name() {
 bool cart_load (char *cart){
     snprintf(ctx.filename, sizeof(ctx.filename), "%s", cart);
 
-    FILE *fp = fopen(cart, "r")
+    FILE *fp = fopen(cart, "r");
+
+    if(!fp){
+        printf("Failed to open: %s\n", cart);
+        return false;
+    }
+
+    printf("Opened: %s\n", ctx.filename);
+
+    //size of rom
+    fseek(fp, 0, SEEK_END);
+    ctx.rom_size = ftell(fp);
+
+    rewind(fp);
+
+    //reading ctx.rom_size(size) of bytes of data from the file 
+    //pointed to by fp into the memory pointed to by ctx.rom_data
+    ctx.rom_data = malloc(ctx.rom_size);
+    fread(ctx.rom_data, ctx.rom_size, 1, fp);
+    fclose(fp);
+
+    ctx.header = (rom_header*)(ctx.rom_data + 0x100);
+    ctx.header->title[15] = 0;
+
+    printf("Cartridge Loaded:\n");
+    printf("\t Title    : %s\n", ctx.header->title);
+    printf("\t Type     : %2.2X (%s)\n", ctx.header->type, cart_type_name());
+    printf("\t ROM Size : %d KB\n", 32 << ctx.header->rom_size);
+    printf("\t RAM Size : %2.2X\n", ctx.header->ram_size);
+    printf("\t LIC Code : %2.2X (%s)\n", ctx.header->lic_code, cart_lic_name());
+    printf("\t ROM Vers : %2.2X\n", ctx.header->version);
+
+    //This byte contains an 8-bit checksum computed from 
+    //the cartridge header bytes $0134–014C.
+    //The boot ROM verifies this checksum. 
+    //If the byte at $014D does not match the lower 8 bits of checksum
+    u8 checksum = 0;
+    for (u16 address = 0x0134; address <= 0x014C; address++) {
+        checksum = checksum - ctx.rom_data[address] - 1;
+    }
+
+    printf("\t Checksum : %2.2X (%s)\n", ctx.header->checksum, (checksum & 0xFF) ? "PASSED" : "FAILED");
+
+    return true;
 };
