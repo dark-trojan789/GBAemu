@@ -2,5 +2,5 @@
 
 #include <common.h>
 
-void ppu_init();
-void ppu_tick();
+void cpu_init();
+bool cpu_step();
