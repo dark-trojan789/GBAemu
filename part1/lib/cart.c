@@ -266,7 +266,7 @@ const char *cart_lic_name() {
     if (ctx.header->lic_code == 0x33) {
         // Use new license code
         if (ctx.header->new_lic_code <= 0xA4) {
-            return LIC_CODE[ctx.header->new_lic_code];
+            return LIC_CODE[ctx.header->lic_code];
         }
         return "UNKNOWN";
     } else {
